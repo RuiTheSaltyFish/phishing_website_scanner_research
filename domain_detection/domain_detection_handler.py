@@ -44,7 +44,7 @@ class DomainDetectionHandler:
                     #     if domain_rule.page_rank_yparam["use_build_in_pagerank"]:
                     #         result = ddf.get_pagerank(detect_url,_PAGERANK_DB)
                     #     else:
-                    #         result = ddf.get_pagerank_localservice(detect_url)
+                    #         result = ddf.get_page_rank_by_api(domain_rule,detect_url)
                         
                     #     deficient_score = float(
                     #         domain_rule.page_rank_yparam["deficient"]
