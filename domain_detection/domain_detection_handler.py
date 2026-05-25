@@ -58,7 +58,7 @@ class DomainDetectionHandler:
                             detect_url = final_url
                         else:
                             detect_url = web_url
-                        result = ddf.check_domain_age(domain_rule, detect_url)
+                        result = ddf.check_domain_age_rdap(domain_rule, detect_url)
                         if result:
                             flagged_case_in_rules += 1
 
