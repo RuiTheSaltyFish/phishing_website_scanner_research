@@ -1,0 +1,70 @@
+title: TECHNOLOGIES COUNT
+description: Page body and tag lower than certain amount indicate a phishing page
+date: 11/11/2024
+type: dom
+risk_score: 1
+detection:
+  technologies_count:
+    deficient: 1
+    tech_list:
+      Google Analytics:
+        patterns:
+        - google-analytics.com
+        - gtag(
+        - ga('send
+        - googletagmanager.com
+        - gtm.js
+
+      jQuery:
+        patterns:
+        - jquery.min.js
+        - jquery.js
+        - jquery-
+
+      Bootstrap:
+        patterns:
+        - bootstrap.min.js
+        - bootstrap.js
+        - bootstrap.min.css
+        - bootstrap.css
+
+      Cloudflare:
+        patterns:
+        - cloudflare.com
+        - cdnjs.cloudflare.com
+        - /cdn-cgi/
+        - __cf_bm
+        - rocket-loader
+
+      Google Static Assets:
+        patterns:
+        - gstatic.com
+        - googleapis.com
+        - apis.google.com
+
+      Common CDNs (General):
+        patterns:
+        - cdnjs.cloudflare.com
+        - jsdelivr.net
+        - unpkg.com
+        - stackpath.bootstrapcdn.com
+        - fastly.net
+
+      Microsoft & AWS CDNs:
+        patterns:
+        - ajax.aspnetcdn.com
+        - edge.microsoft.com
+        - s3.amazonaws.com
+        - cloudfront.net
+
+      WordPress/Automattic Assets:
+        patterns:
+        - s0.wp.com
+        - s1.wp.com
+        - widgets.wp.com
+        - wp-content/themes
+
+      Akamai:
+        patterns:
+        - akamaihd.net
+        - edgekey.net

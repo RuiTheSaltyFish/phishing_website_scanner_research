@@ -1,0 +1,10 @@
+title: PAGE RANK BELOW 0.2
+description: Domain has a page rank score below the defined threshold, suggesting low web presence and credibility.
+date: 11/11/2024
+type: domain
+risk_score: 1
+detection:
+  page_rank:
+    use_build_in_pagerank: True
+    source: OpenPageRank
+    deficient: 0.2

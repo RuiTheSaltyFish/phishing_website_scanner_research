@@ -1,0 +1,10 @@
+title: URL WITH HASH EMAIL FRAGMENT
+description: URL contains an email address embedded within the hash fragment, a technique commonly used to prefill phishing forms or track victims via mailto-based redirect schemes.
+date: 11/11/2024
+type: url
+risk_score: 2
+detection:
+  url_regex:
+    regex: '(?<=#)[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9\-]+(?:\.[a-zA-Z0-9\-]+)*\.[a-zA-Z]{2,}'
+    method: match
+  domain_name_only: False

@@ -1,0 +1,7 @@
+title: NOT HTTPS
+description: The URL uses HTTP instead of HTTPS, meaning the connection is unencrypted. Legitimate sites handling sensitive data almost exclusively use HTTPS.
+date: 11/11/2024
+type: url
+risk_score: 4
+detection:
+  https_check: True

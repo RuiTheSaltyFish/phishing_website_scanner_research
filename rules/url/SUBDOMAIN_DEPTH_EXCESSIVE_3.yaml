@@ -1,0 +1,7 @@
+title: SUBDOMAIN DEPTH EXCESSIVE LEVEL 3
+description: URL contains an excessive 3 of subdomain levels, used to embed trusted brand names in subdomains and deceive users.
+date: 11/11/2024
+type: url
+risk_score: 1
+detection:
+  sub_domain_level: 3

@@ -1,0 +1,75 @@
+title: URL SHORTENER DETECTED
+description: URL originates from a known URL shortening service, frequently abused to mask phishing destinations from users and security filters.
+date: 11/11/2024
+type: url
+risk_score: 1
+detection:
+  url_shorteners:
+  - bit.ly
+  - tinyurl.com
+  - is.gd
+  - rb.gy
+  - qrco.de
+  - q-r.to
+  - l.ead.me
+  - snip.ly
+  - qr-codes.io
+  - zpr.io
+  - did.li
+  - ct.ws
+  - orbitor.dev
+  - wl.co
+  - t.co
+  - mub.me
+  - ow.ly
+  - buff.ly
+  - dlvr.it
+  - short.io
+  - shorte.st
+  - adf.ly
+  - bc.vc
+  - sh.st
+  - cur.lv
+  - clk.sh
+  - lnkd.in
+  - go.ly
+  - tiny.cc
+  - shorturl.at
+  - cutt.ly
+  - rebrand.ly
+  - soo.gd
+  - qr.ae
+  - v.gd
+  - u.to
+  - git.io
+  - youtu.be
+  - goo.gl
+  - ift.tt
+  - wp.me
+  - tr.im
+  - x.co
+  - ff.im
+  - su.pr
+  - ht.ly
+  - ping.fm
+  - post.ly
+  - surl.li
+  - chk.me
+  - i.gal
+  - hm.ru
+  - uniqo.de
+  - ln.run
+  - gtly.to
+  - kutt.it
+  - s.id
+  - urlis.net
+  - t2m.io
+  - shrtco.de
+  - chilp.it
+  - clicky.me
+  - vzturl.com
+  - qr1.be
+  - 1url.com
+  - hyperurl.co
+  - smarturl.it
+  - spoti.fi

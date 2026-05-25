@@ -1,0 +1,11 @@
+title: DOMAIN DIGIT RATIO HIGH
+description: Domain contains an abnormally high ratio of numeric characters relative to total length.
+date: 11/11/2024
+type: url
+risk_score: 4
+detection:
+  url_regex:
+    regex: "[0-9]"
+    method: findall
+    limit_occurrences: 4
+  domain_name_only: True

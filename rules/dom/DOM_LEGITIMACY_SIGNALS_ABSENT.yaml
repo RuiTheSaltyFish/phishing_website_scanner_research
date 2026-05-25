@@ -1,0 +1,55 @@
+title: DOM LEGITIMACY SIGNALS ABSENT
+description: Page DOM lacks structural elements commonly found in legitimate websites, such as navigation, footer, or contact information.
+date: 11/11/2024
+type: dom
+risk_score: 1
+detection:
+  check_missing_legitimacy_signals:
+    threshold: 7
+    signals:
+    - name: no_nav_and_footer
+      weight: 3
+      params:
+
+
+    - name: low_link_density
+      weight: 2
+      params:
+        min_links: 3
+
+    - name: has_password_field
+      weight: 3
+      params:
+
+
+    - name: no_images
+      weight: 1
+      params:
+
+
+    - name: no_title_or_h1
+      weight: 1
+      params:
+
+
+    - name: no_copyright_text
+      weight: 1
+      params:
+
+
+    - name: single_form_single_purpose
+      weight: 2
+      params:
+        max_forms: 1
+        max_inputs: 4
+
+    - name: no_lang_attribute
+      weight: 1
+      params:
+
+
+    - name: no_favicon
+      weight: 1
+      params:
+
+

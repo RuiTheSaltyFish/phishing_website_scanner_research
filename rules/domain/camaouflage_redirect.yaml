@@ -1,0 +1,10 @@
+title: Redirect to high page rank to indicate camouflage for non-target audience
+description: Flag when the redirect to webpage rank domain is low
+date: 11/11/2024
+type: domain
+detection:
+  camouflage_redirect:
+    trigger_rank: 0.3
+    use_build_in_pagerank: False
+
+risk_score: 50

@@ -1,0 +1,122 @@
+title: DEFAULT HOSTING PLATFORM DOMAIN NAME
+description: URL is hosted on a known free hosting platform and not custom domain name setup commonly abused by threat actors to deploy phishing pages at no cost.
+date: 11/11/2024
+type: url
+risk_score: 2
+detection:
+  hosting_platform_penalty_score:
+    platform_list:
+    - domain: linktr.ee
+      company: Linktree
+      website: linktree.com
+    - domain: beacons.ai
+      company: Beacons
+      website: beacons.ai
+    - domain: typeform.com
+      company: Typeform
+      website: typeform.com
+    - domain: jotform.com
+      company: JotForm
+      website: jotform.com
+    - domain: surveymonkey.com
+      company: SurveyMonkey
+      website: surveymonkey.com
+    - domain: portfolio.adobe.com
+      company: Adobe Portfolio
+      website: adobe.com
+    - domain: carrd.co
+      company: Carrd
+      website: carrd.co
+    - domain: wix.com
+      company: Wix
+      website: wix.com
+    - domain: squarespace.com
+      company: Squarespace
+      website: squarespace.com
+    - domain: webflow.io
+      company: Webflow
+      website: webflow.com
+    - domain: vercel.app
+      company: Vercel
+      website: vercel.com
+    - domain: ghost.io
+      company: Ghost
+      website: ghost.org
+    - domain: blogspot.com
+      company: Blogger
+      website: blogger.com
+    - domain: github.io
+      company: GitHub Pages
+      website: github.com
+    - domain: gitlab.io
+      company: GitLab Pages
+      website: gitlab.com
+    - domain: netlify.app
+      company: Netlify
+      website: netlify.com
+    - domain: pages.dev
+      company: Cloudflare Pages
+      website: cloudflare.com
+    - domain: render.com
+      company: Render
+      website: render.com
+    - domain: replit.app
+      company: Replit
+      website: replit.com
+    - domain: s3.amazonaws.com
+      company: Amazon S3
+      website: aws.amazon.com
+    - domain: weebly.com
+      company: Weebly
+      website: www.weebly.com
+    - domain: storage.googleapis.com
+      company: Google Cloud Storage
+      website: cloud.google.com
+    - domain: blob.core.windows.net
+      company: Azure Blob Storage
+      website: azure.microsoft.com
+    - domain: godaddysites.com
+      company: GoDaddy
+      website: godaddy.com
+    - domain: sites.google.com
+      company: Google Sites
+      website: sites.google.com
+    - domain: wordpress.com
+      company: WordPress.com
+      website: wordpress.com
+    - domain: framer.website
+      company: Framer
+      website: framer.com
+    - domain: framer.app
+      company: Framer
+      website: framer.com
+    - domain: bubble.io
+      company: Bubble
+      website: bubble.io
+    - domain: canva.site
+      company: Canva
+      website: canva.com
+    - domain: myshopify.com
+      company: Shopify
+      website: shopify.com
+    - domain: unbounce.com
+      company: Unbounce
+      website: unbounce.com
+    - domain: leadpages.net
+      company: Leadpages
+      website: leadpages.com
+    - domain: clickfunnels.com
+      company: ClickFunnels
+      website: clickfunnels.com
+    - domain: webnode.com
+      company: Webnode
+      website: webnode.com
+    - domain: jimdo.com
+      company: Jimdo
+      website: jimdo.com
+    - domain: gitbook.io
+      company: GitBook
+      website: gitbook.com
+    - domain: hubspotpagebuilder.com
+      company: HubSpot
+      website: hubspot.com

@@ -1,0 +1,8 @@
+title: FORM CONTAIN MAILTO
+description: This form is using mailto to mail the sumbit to somebody
+date: 11/11/2024
+type: dom
+risk_score: 2
+detection:
+  form:
+    mailto_detect: True

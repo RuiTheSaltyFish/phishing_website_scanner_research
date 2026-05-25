@@ -1,0 +1,11 @@
+title: URL SPECIAL CHAR DETECTED
+description: URL contains special or uncommon characters that may be used to obfuscate the true destination or deceive users visually.
+date: 11/11/2024
+type: url
+risk_score: 2
+detection:
+  url_regex:
+    regex: "[!@#$%^&*()_+\\-]"
+    method: "findall"
+    limit_occurrences: 2
+  domain_name_only: True
