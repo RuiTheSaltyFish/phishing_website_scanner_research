@@ -1,4 +1,4 @@
-# Phishing Website Scanner Reserach
+# Phishing Website Scanner Research
 This is a reserach project for phishing website scanner by using yaml as rules
 
 # Important 
