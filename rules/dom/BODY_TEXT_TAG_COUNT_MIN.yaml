@@ -2,8 +2,8 @@ title: BODY TEXT TAG COUNT
 description: Page body and tag lower than certain amount indicate a phishing page
 date: 11/11/2024
 type: dom
-risk_score: 1
+risk_score: 2.42
 detection:
   body_text_tag_count:
-    body_length_minimum: 42000
+    body_length_minimum: 1000
     tag_minimum: 200

@@ -1,7 +1,8 @@
 title: DOMAIN AGE BELOW THRESHOLD 12 MONTH
-description: Domain was registered recently and falls below the 12 month, which is commonly associated with newly created phishing infrastructure.
+description: >
+  Domain was registered recently and falls below the 12 month, which is commonly associated with newly created phishing infrastructure  but this is common for newly created site if your trust this site and it souce you can safetly ignore this vector.
 date: 11/11/2024
 type: domain
-risk_score: 1
+risk_score: 3.47
 detection:
   domain_age_below_by_month: 12

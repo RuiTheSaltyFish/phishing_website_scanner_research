@@ -2,7 +2,7 @@ title: DEFAULT HOSTING PLATFORM DOMAIN NAME
 description: URL is hosted on a known free hosting platform and not custom domain name setup commonly abused by threat actors to deploy phishing pages at no cost.
 date: 11/11/2024
 type: url
-risk_score: 2
+risk_score: 3.47
 detection:
   hosting_platform_penalty_score:
     platform_list:

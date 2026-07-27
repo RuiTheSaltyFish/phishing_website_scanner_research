@@ -69,6 +69,13 @@ SEARCH_ENGINES = {
     "duckduckgo.com",
 }
 
+# risk_score >= this value is classified as phishing (is_phishing = True)
+PHISHING_RISK_THRESHOLD = 7.24
+
+# True  -> result.html shows the matched-rules table with details
+# False -> result.html just shows a simple "Possible Phishing" flag, no rule list
+SHOW_MATCHED_RULES = False
+
 DOMAIN_PARKING = {
     "website.org", "expireddomains.com", "sedoparking.com",
     "dan.com", "hugedomains.com", "godaddy.com", "namecheap.com",
@@ -79,7 +86,7 @@ DOMAIN_PARKING = {
     "domainmarket.com", "epik.com", "registrar.eu", "domainagent.com",
 }
 
-SKIPPING_CASE = [
+CANT_ACCESS_HTML = [
     "phishing", "404", "503", "just a moment", "attention required",
     "sitenotfound", "blognotfound", "deployment unavailable",
     "403", "blocked", "access denied", "captcha", "please verify",
@@ -92,7 +99,78 @@ SKIPPING_CASE = [
     "opensearch dashboards",
 ]
 
-SKIPPING_CASE = [s.lower().strip().replace(" ", "").replace("\t", "") for s in SKIPPING_CASE]
+CANT_ACCESS_HTML = [s.lower().strip().replace(" ", "").replace("\t", "") for s in CANT_ACCESS_HTML]
+
+# Formal, human-readable reason for each "can't access" indicator above.
+# Keys are matched against a normalized (lowercased, no-space) page title.
+CANT_ACCESS_REASONS = {
+    "phishing": "The page identified itself as a phishing/blocked site.",
+    "404": "The page returned a 404 Not Found error.",
+    "503": "The server returned a 503 Service Unavailable error.",
+    "just a moment": "The site is behind a bot-verification challenge.",
+    "attention required": "The site is behind a security/bot-verification challenge.",
+    "sitenotfound": "The site could not be found.",
+    "blognotfound": "The blog could not be found.",
+    "deployment unavailable": "The hosting deployment is currently unavailable.",
+    "403": "The server returned a 403 Forbidden error.",
+    "blocked": "Access to the page was blocked.",
+    "access denied": "Access to the page was denied.",
+    "captcha": "The site presented a CAPTCHA challenge.",
+    "please verify": "The site required human verification before it would load.",
+    "unusual traffic": "The site flagged unusual traffic and blocked the request.",
+    "checking your browser...": "The site is running a browser-verification check.",
+    "vérification de sécurité": "The site required a security verification.",
+    "honninkakunin": "The site required identity verification.",
+    "zugriff verweigert": "Access to the page was denied.",
+    "hosting services unavailable": "The hosting provider reported the service is unavailable.",
+    "site currently unavailable": "The site reported that it is currently unavailable.",
+    "this store is unavailable": "The store reported that it is currently unavailable.",
+    "website expired": "The website has expired.",
+    "coming soon": "The site is showing a \"coming soon\" placeholder page.",
+    "unknown domain": "The domain could not be resolved.",
+    "redirecting...": "The site got stuck on a redirect page.",
+    "error: the request could not be satisfied": "The request could not be satisfied by the server.",
+    "opensearch dashboards": "The page loaded an internal dashboard instead of the target site.",
+}
+
+
+def _classify_scan_error(raw_error: str) -> tuple[str, str]:
+    """Translate a raw exception string from fetch_html/process_url into a
+    formal (title, reason) pair for display, reusing the same categories
+    as CANT_ACCESS_HTML so the wording stays consistent across the app."""
+
+    msg = (raw_error or "").strip()
+
+    # Strip the "fetch_html failed [<url>]: " wrapper if present.
+    if msg.startswith("fetch_html failed ["):
+        parts = msg.split("]: ", 1)
+        if len(parts) == 2:
+            msg = parts[1]
+
+    if msg.startswith("Invalid URL scheme:"):
+        return "Invalid URL", "Please enter a valid URL that starts with http:// or https://."
+
+    if msg.startswith("Skipping:"):
+        title_text = msg.split("Skipping:", 1)[1].strip()
+        normalized_title = title_text.lower().replace(" ", "")
+        for indicator, reason in CANT_ACCESS_REASONS.items():
+            key = indicator.lower().strip().replace(" ", "")
+            if key in normalized_title:
+                return "Unable to Access Website", reason
+        return "Unable to Access Website", f'The page could not be loaded ("{title_text}").'
+
+    if msg.startswith("Landed on redirect sink domain:"):
+        domain = msg.split(":", 1)[1].strip()
+        return "Domain Parked", f"The URL redirected to a domain-parking service ({domain}) rather than a live site."
+
+    if msg.startswith("Landed on search engine domain:"):
+        domain = msg.split(":", 1)[1].strip()
+        return "Search Engine Redirect", f"The URL redirected to a search engine ({domain}) instead of the target site."
+
+    if "timeout" in msg.lower():
+        return "Connection Timed Out", "The page took too long to respond and the scan timed out."
+
+    return "Scan Failed", msg or "An unknown error occurred while scanning this URL."
 
 
 def init_detection_handler():
@@ -220,13 +298,13 @@ def fetch_html(web_url: str) -> tuple[str, int, str]:
                     pass
 
                 title = page.title().lower().replace(" ", "")
-                if any(skip in title for skip in SKIPPING_CASE):
+                if any(skip in title for skip in CANT_ACCESS_HTML):
                     try:
                         page.wait_for_timeout(timeout=20000)
                     except Exception:
                         pass
                     title = page.title().lower().replace(" ", "")
-                    if any(skip in title for skip in SKIPPING_CASE):
+                    if any(skip in title for skip in CANT_ACCESS_HTML):
                         raise Exception(f"Skipping: {title}")
 
                 if final_url:
@@ -299,25 +377,22 @@ def process_url(url):
 
 
 def _score_result_context(url, result):
-    """Shared helper — build template context from a processed result dict."""
+    """Shared helper — build template context from a processed result dict.
+
+    result.html only consumes `url`, `is_phishing`, and `matched_rules`
+    (it does not use risk_level/risk_label), so this classifies phishing
+    purely off PHISHING_RISK_THRESHOLD.
+    """
     risk_score    = result["risk_score"]
     matched_rules = result["matched_rules"]
-
-    if risk_score >= 4:
-        risk_level, risk_label = "high",   "Almost certain is a Phishing Website"
-    elif risk_score >= 3:
-        risk_level, risk_label = "medium",   "Suspicious but not certain"
-    elif risk_score >= 2:
-        risk_level, risk_label = "medium", "Likely suspicious, proceed with caution"
-    else:
-        risk_level, risk_label = "low",    "Likely not a phishing website"
+    is_phishing   = risk_score >= PHISHING_RISK_THRESHOLD
 
     return dict(
         url=url,
         risk_score=risk_score,
-        risk_level=risk_level,
-        risk_label=risk_label,
+        is_phishing=is_phishing,
         matched_rules=matched_rules,
+        show_rules=SHOW_MATCHED_RULES,
     )
 
 
@@ -337,17 +412,17 @@ def scan():
     _, result = process_url(url)
 
     if "error" in result:
-        # Minimal error response — enhance as needed
+        error_title, error_reason = _classify_scan_error(result['error'])
         error_html = f"""
         <main id="main-content" style="flex:1;display:flex;align-items:center;
               justify-content:center;padding:4rem 2rem;text-align:center">
           <div>
             <p style="color:var(--error);font-family:'Manrope',sans-serif;
                       font-weight:800;font-size:1.4rem;margin-bottom:0.75rem">
-              Scan Failed
+              {error_title}
             </p>
-            <p style="color:var(--muted);font-size:0.9rem;max-width:32rem">
-              {result['error']}
+            <p style="color:var(--muted);font-size:0.9rem;max-width:32rem;margin:0 auto">
+              Reason: {error_reason}
             </p>
             <a href="/" style="display:inline-block;margin-top:1.5rem;
                                color:var(--primary);font-size:0.9rem">

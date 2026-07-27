@@ -2,16 +2,10 @@ title: DETECTED FORM MULTI SUBMIT DETECTED
 description: Page contains multiple form submission targets or duplicate submit actions, a pattern associated with credential harvesting pages.
 date: 11/11/2024
 type: dom
-risk_score: 1
+risk_score: 2.71
 detection:
   multiple_submit_detection:
-    min_matches: 2
+    min_matches: 1
     patterns:
-    - name: prevent_default_clear
-      regex: 'preventDefault.{0,200}value\s*=\s*[''"][''"]'
-
     - name: submit_counter
       regex: '(submitCount|attempts|retryCount|tryCount)'
-
-    - name: fake_password_error
-      regex: '(incorrect|invalid|wrong|error).{0,100}password'

@@ -152,7 +152,7 @@ def check_domain_age(domain_rule: DomainRule, web_url: str) -> bool:
             + (today.month - creation_date.month)
         )
 
-        return total_months <= domain_rule.domain_age_below_month_yparam
+        return total_months < domain_rule.domain_age_below_month_yparam
 
     except Exception as e:
         logging.debug(f"check_domain_age {web_url}: {e}")
@@ -241,30 +241,36 @@ def load_pagerank(csv_path: str) -> dict:
 def get_pagerank(web_url: str, pagerank: dict) -> float:
     """
     查询域名 PageRank 分数
-    Returns -1.0 if not found
+    Returns 0.0 if not found
+
+    NOTE: assumes `pagerank` stores RAW page_rank_decimal values (0-10 scale).
+    Base domain is checked first (this is what's normally cached), with the
+    full subdomain string as a fallback -- same priority as get_domain_rank.
     """
-    
     ext = tldextract.extract(web_url)
 
     if ext.domain == "www":
-        # www.gov.uk 这类情况，domain 实际上是 suffix
+        # e.g. www.gov.uk -> tldextract treats "gov.uk" as the suffix,
+        # so the meaningful "domain" here is actually the suffix.
         domain = ext.suffix
+        with_subdomain = ""
     else:
+        domain = f"{ext.domain}.{ext.suffix}"
+        with_subdomain = ""
         if ext.subdomain:
-            domain = f"{ext.subdomain}.{ext.domain}.{ext.suffix}"
-        else:
-            domain = f"{ext.domain}.{ext.suffix}"
-            
+            with_subdomain = f"{ext.subdomain}.{ext.domain}.{ext.suffix}"
+
     domain = domain.strip().lower()
+    with_subdomain = with_subdomain.strip().lower()
 
-    if domain in pagerank:
-        return pagerank[domain]
+    if domain in pagerank:                                     # base domain checked FIRST
+        return pagerank[domain] / 10
 
-    # 去掉 www 再查
-    if domain.startswith("www."):
-        stripped = domain[4:]
-        if stripped in pagerank:
-            return pagerank[stripped] / 10
+    if with_subdomain and with_subdomain in pagerank:          # fallback to full subdomain string
+        return pagerank[with_subdomain] / 10
+
+    with open("rank.txt", "a") as file:
+        file.write(f"cannot find :{web_url}\n")
 
     return 0.0
 
@@ -352,34 +358,80 @@ def get_page_rank_by_api(domain_rule: DomainRule, web_url: str) -> bool:
 
 
 def check_dns_records(domain: str, cases: list) -> dict:
+    common_mail_subdomains = ["send", "mail", "send.auth", "mg", "em", "mailer", "bounce"]
+
+    esp_spf_signatures = {
+        "amazonses.com": "Amazon SES / Resend",
+        "sendgrid.net": "SendGrid",
+        "mailgun.org": "Mailgun",
+        "_spf.google.com": "Google Workspace",
+        "spf.protection.outlook.com": "Microsoft 365",
+    }
+
     result = {}
-    
-    # MX, CAA, SOA
-    for record_type in ("MX", "CAA","DNSKEY"):
+
+    # CAA, DNSKEY (simple presence check)
+    for record_type in ("CAA", "DNSKEY"):
         if record_type in cases:
             try:
                 answers = dns.resolver.resolve(domain, record_type)
-
-                result[record_type] = True
+                result[record_type] = True if len(answers) > 0 else False
             except Exception:
                 result[record_type] = False
-    
+
+    # MX (apex first, then common ESP subdomains)
+    if "MX" in cases:
+        mx_info = {"status": "none", "records": [], "subdomain": None}
+
+        try:
+            answers = dns.resolver.resolve(domain, "MX")
+            records = [str(r.exchange) for r in answers]
+            if records:
+                mx_info["status"] = "apex"
+                mx_info["records"] = records
+        except Exception:
+            pass
+
+        if mx_info["status"] == "none":
+            for sub in common_mail_subdomains:
+                try:
+                    answers = dns.resolver.resolve(f"{sub}.{domain}", "MX")
+                    records = [str(r.exchange) for r in answers]
+                    if records:
+                        mx_info["status"] = "subdomain"
+                        mx_info["subdomain"] = sub
+                        mx_info["records"] = records
+                        break
+                except Exception:
+                    continue
+
+        result["MX"] = mx_info if mx_info["status"] != "none" else None
+
     # SPF
     if "SPF" in cases:
+        spf_info = None
         try:
             answers = dns.resolver.resolve(domain, "TXT")
-            result["SPF"] = any("v=spf1" in r.to_text() for r in answers)
+            spf_records = [r.to_text() for r in answers if "v=spf1" in r.to_text()]
+            if spf_records:
+                provider = None
+                for sig, prov in esp_spf_signatures.items():
+                    if any(sig in s for s in spf_records):
+                        provider = prov
+                        break
+                spf_info = {"present": True, "provider": provider}
         except Exception:
-            result["SPF"] = False
-    
+            pass
+        result["SPF"] = spf_info
+
     # DMARC
     if "DMARC" in cases:
         try:
             answers = dns.resolver.resolve(f"_dmarc.{domain}", "TXT")
-            result["DMARC"] = True
+            result["DMARC"] = True if len(answers) > 0 else False
         except Exception:
             result["DMARC"] = False
-    
+
     return result
 
 def is_missing_dns_records(web_url: str, required_records: list) -> bool:

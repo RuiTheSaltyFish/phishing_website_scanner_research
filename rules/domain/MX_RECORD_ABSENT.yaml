@@ -2,7 +2,7 @@ title: MX RECORD ABSENT
 description: No MX record found for the domain, indicating it was likely registered solely for phishing rather than legitimate business use.
 date: 11/11/2024
 type: domain
-risk_score: 1
+risk_score: 1.35
 detection:
   dns_record_check:
     check_missing: [ "MX" ]

@@ -1,9 +1,9 @@
-title: DOMAIN ENTROPY HIGH
+title: DOMAIN NAME ENTROPY HIGH
 description: Domain name contains high character entropy or randomized strings.
 date: 11/11/2024
 type: url
-risk_score: 1
+risk_score: 1.26
 detection:
   domain_name_entropy_threshold:
     min_length: 4
-    threshold: 70
+    threshold: 76

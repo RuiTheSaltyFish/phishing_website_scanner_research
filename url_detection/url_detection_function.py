@@ -44,7 +44,7 @@ def detect_web_url_subdomain_level(url_rule: UrlRule, web_url: str) -> bool:
 
     except Exception as e:
         logging.error(f"detect_web_url_subdomain_level error occurred: {e}")
-        raise
+        return False
 
 
 def detect_hosting_platform_url(url_rule: UrlRule, web_url: str,hosting_list = []):
@@ -86,7 +86,7 @@ def detect_url_regex(url_rule: UrlRule, web_url: str) -> bool:
             return False
     except Exception as e:
         logging.error(f"detect_url_regex error occurred: {e}")
-        raise
+        return False
 
 def _build_pinyin_words() -> set:
     pinyin_set = set()
@@ -206,7 +206,7 @@ JAPANESE_ROMAJI = _build_japanese_romaji()
 KOREAN_ROMAJI   = _build_korean_romaji()
 COMBINED_WORDS  = ENGLISH_WORDS | PINYIN_WORDS | JAPANESE_ROMAJI | KOREAN_ROMAJI
 
-def is_gibberish_domain(web_url: str, min_length: int = 4, threshold: float = 80.0) -> bool:
+def calculate_domain_name_entrophy(web_url: str, min_length: int = 4, threshold: float = 80.0) -> bool:
 
     def dp_match(word: str, dictionary: set) -> bool:
         w = word.lower()
@@ -245,25 +245,25 @@ def is_gibberish_domain(web_url: str, min_length: int = 4, threshold: float = 80
         if match:
             return True
 
-        # 3. 中文拼音单库
+        # 3. 中文拼音单库 DP
         if dp_match(w_alpha, PINYIN_WORDS):
             return True
 
-        # 4. 日文罗马音单库
+        # 4. 日文罗马音单库 DP
         if dp_match(w_alpha, JAPANESE_ROMAJI):
             return True
 
-        # 5. 韩文罗马音单库
+        # 5. 韩文罗马音单库 DP
         if dp_match(w_alpha, KOREAN_ROMAJI):
             return True
 
-        # 6. 跨词库混合
+        # 6. 跨词库混合 DP
         if dp_match(w_alpha, COMBINED_WORDS):
             return True
 
         return False
 
-
+    # ── 域名解析 ────────────────────────────────────────────────
     ext = tldextract.extract(web_url)
 
     if ext.domain == "www":
@@ -302,3 +302,57 @@ def _edit_distance(a: str, b: str) -> int:
             prev = temp
     return dp[n]
 
+def is_typosquatting(
+    web_url: str,
+    target_domains: list[str],
+    digit_substitution: dict[str, str],
+    homoglyph_map: dict[str, str],
+) -> bool:
+
+    def normalize(word: str) -> str:
+        w = word.lower()
+        w = ''.join(digit_substitution.get(c, c) for c in w)
+        for glyph, replacement in sorted(homoglyph_map.items(), key=lambda x: len(x[0]), reverse=True):
+            w = w.replace(glyph, replacement)
+        return w
+
+    def check_part(part: str) -> bool:
+        if not part or len(part) <= 3:
+            return False
+        normalized = normalize(part)
+        for known in target_domains:
+            known_lower = known.lower()
+
+            # 完全匹配 → 跳过，真实品牌域名不是 typosquatting
+            if part.lower() == known_lower:
+                continue
+
+            # normalize 后完全匹配 → 是 typosquatting（如 "gooogle" → "google"）
+            if normalized == known_lower and part.lower() != known_lower:
+                return True
+
+            # edit distance 检测
+            if abs(len(normalized) - len(known_lower)) <= 2:
+                dist = _edit_distance(normalized, known_lower)
+                if 0 < dist <= 2:
+                    return True
+
+            if abs(len(part) - len(known_lower)) <= 1:
+                dist = _edit_distance(part, known_lower)
+                if dist == 1:
+                    return True
+        return False
+
+    ext       = tldextract.extract(web_url)
+    domain    = ext.domain.lower()
+    subdomain = ext.subdomain.lower() if ext.subdomain else ""
+
+    if check_part(domain):
+        return True
+
+    for part in subdomain.split("."):
+        if part and part != "www":
+            if check_part(part):
+                return True
+
+    return False

@@ -75,11 +75,11 @@ class UrlDetectionHandler:
                         if not detect_result:
                             flagged_case_in_rules += 1
                     
-                    case UrlDetectionCase.FUZZ_GIBBERISH:
+                    case UrlDetectionCase.DOMAIN_NAME_ENTROPY:
                         url = final_url if final_url else web_rul
                         threshold = url_rule.gribberish_domain_name_yparam["threshold"]
                         min_length = url_rule.gribberish_domain_name_yparam["min_length"]
-                        detect_result = urdf.is_gibberish_domain(url,min_length,threshold)
+                        detect_result = urdf.calculate_domain_name_entrophy(url,min_length,threshold)
                         if detect_result:
                              flagged_case_in_rules += 1
 

@@ -2,13 +2,13 @@ title: CONTENT DOMAIN MISMATCH
 description: Page content does not semantically relate to the registered domain name, suggesting impersonation of another brand or service.
 date: 11/11/2024
 type: dom
-risk_score: 3
+risk_score: 2.63
 detection:
   page_domain_matching:
-    deficient: 0.70
+    min_similarity_score: 0.70
     detect_meta: [ og:site_name, og:title ]
     title_acronym_detection:
-      min_length: 3
-      acronym_deficient: 80
+      min_acronym_length: 2
+      acronym_min_similarity_score: 0.50
     generic_titles: []
-    min_domain_len: 3
+    min_domain_len: 4

@@ -10,7 +10,7 @@ import os
 _BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 _CSV_PATH = os.path.join(_BASE_DIR, "open_rank_score10m.csv")
 
-# _PAGERANK_DB = ddf.load_pagerank(_CSV_PATH)
+_PAGERANK_DB = ddf.load_pagerank(_CSV_PATH)
 
 
 class DomainDetectionHandler:
@@ -34,24 +34,23 @@ class DomainDetectionHandler:
 
             for detect_case in domain_rule.detect_case:
                 match detect_case:
-                    # case DomainDetectionCase.PAGERANK:
-                    #     if final_url != "":
-                    #         detect_url = final_url
+                    case DomainDetectionCase.PAGERANK:
+                        if final_url != "":
+                            detect_url = final_url
                            
-                    #     else:
-                    #         detect_url = web_url
+                        else:
+                            detect_url = web_url
                         
-                    #     if domain_rule.page_rank_yparam["use_build_in_pagerank"]:
-                    #         result = ddf.get_pagerank(detect_url,_PAGERANK_DB)
-                    #     else:
-                    #         result = ddf.get_page_rank_by_api(domain_rule,detect_url)
                         
-                    #     deficient_score = float(
-                    #         domain_rule.page_rank_yparam["deficient"]
-                    #     )
+                        result = ddf.get_pagerank(detect_url,_PAGERANK_DB)
+                       
+                        
+                        threshold_score = float(
+                            domain_rule.page_rank_yparam["threshold"]
+                        )
 
-                    #     if result < deficient_score:
-                    #         flagged_case_in_rules += 1
+                        if result < threshold_score:
+                            flagged_case_in_rules += 1
 
                     case DomainDetectionCase.DOMAIN_AGE:
                         if final_url != "":
@@ -80,9 +79,9 @@ class DomainDetectionHandler:
                             flagged_case_in_rules += 1
 
 
-                    case DomainDetectionCase.MIN_RIDIRECT:
-                        if redirect_counter > domain_rule.min_redirect_yparam:
-                            flagged_case_in_rules += 1
+                    # case DomainDetectionCase.MIN_RIDIRECT:
+                    #     if redirect_counter > domain_rule.min_redirect_yparam:
+                    #         flagged_case_in_rules += 1
 
                     # case DomainDetectionCase.REDIRECT_RANK:
                     #   if final_url != "":
@@ -100,16 +99,16 @@ class DomainDetectionHandler:
                     #       if r:
                     #           flagged_case_in_rules += 1
 
-                    case DomainDetectionCase.DOMAIN_REGISTER_YEAR:
-                      min_year = domain_rule.domain_registration_period_year_yparam
+                    # case DomainDetectionCase.DOMAIN_REGISTER_YEAR:
+                    #   min_year = domain_rule.domain_registration_period_year_yparam
 
-                      if final_url != "":
-                          result = ddf.check_registration_period(final_url, min_year)
-                      else:
-                          result = ddf.check_registration_period(web_url, min_year)
+                    #   if final_url != "":
+                    #       result = ddf.check_registration_period(final_url, min_year)
+                    #   else:
+                    #       result = ddf.check_registration_period(web_url, min_year)
 
-                      if result:
-                          flagged_case_in_rules += 1
+                    #   if result:
+                    #       flagged_case_in_rules += 1
 
                     case DomainDetectionCase.DNS_RECORD_CHECK:
                       dns_record_check_missing = domain_rule.dns_record_check_yparam[

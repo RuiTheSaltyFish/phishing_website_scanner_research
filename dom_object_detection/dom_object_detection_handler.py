@@ -124,21 +124,21 @@ class DomObjectDetectionHandler:
                             if r:
                                 flagged_case_in_rules += 1
                             
-                        case DomDetectionCase.MIMIC_LOGIN_STRUCTURE:
-                            mimic_login_structure_setting =  dom_rule.mimic_login_site_structure_yparam
-                            similarity_theresold = mimic_login_structure_setting["similarity_theresold"]
-                            structure_list = mimic_login_structure_setting["structure_list"]
+                        # case DomDetectionCase.MIMIC_LOGIN_STRUCTURE:
+                        #     mimic_login_structure_setting =  dom_rule.mimic_login_site_structure_yparam
+                        #     similarity_theresold = mimic_login_structure_setting["similarity_theresold"]
+                        #     structure_list = mimic_login_structure_setting["structure_list"]
                             
-                            r = domdf.is_login_structure_mimic(soup,web_rul,structure_list,similarity_theresold)
+                        #     r = domdf.is_login_structure_mimic(soup,web_rul,structure_list,similarity_theresold)
                             
-                            if r:
-                                flagged_case_in_rules += 1
+                        #     if r:
+                        #         flagged_case_in_rules += 1
                              
                         case DomDetectionCase.PAGE_TITLE_MATCHING:
                           
                             generic_title = dom_rule.page_domain_matching_yparam["generic_titles"]
                             min_len = dom_rule.page_domain_matching_yparam["min_domain_len"]
-                            deficient = dom_rule.page_domain_matching_yparam["deficient"]
+                            deficient = dom_rule.page_domain_matching_yparam["min_similarity_score"]
                             meta_list = dom_rule.page_domain_matching_yparam["detect_meta"]
                             title_acronym_detection = dom_rule.page_domain_matching_yparam["title_acronym_detection"]
                             
@@ -148,9 +148,9 @@ class DomObjectDetectionHandler:
                         
                         case DomDetectionCase.TECHNOLOGIES_COUNT:
                             tech_list = dom_rule.techologies_yparam["tech_list"]
-                            tl_deficient = dom_rule.techologies_yparam["deficient"]
+                            min_appear = dom_rule.techologies_yparam["min_appear"]
                             
-                            r = domdf.count_detected_technologies(soup,tech_list,tl_deficient)
+                            r = domdf.count_detected_technologies(soup,tech_list,min_appear)
                             if r:
                                 flagged_case_in_rules += 1
                             

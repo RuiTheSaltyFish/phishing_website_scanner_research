@@ -62,9 +62,9 @@ class UrlRule(BaseRuleTemplate):
             self.sub_domain_level_yparam = detection['sub_domain_level']
             self.detect_case.append(UrlDetectionCase.SUB_DOMAIN_LEVEL)
             
-        if "gibberish_domain_name" in detection:
+        if "domain_name_entropy_threshold" in detection:
             self.gribberish_domain_name_yparam = detection["domain_name_entropy_threshold"]
-            self.detect_case.append(UrlDetectionCase.FUZZ_GIBBERISH)
+            self.detect_case.append(UrlDetectionCase.DOMAIN_NAME_ENTROPY)
 
         if 'length_detection' in detection:
             self.url_length_yparam = detection["length_detection"]

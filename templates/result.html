@@ -22,10 +22,10 @@
   }
 
   .rescan-bubble {
-    background: #222222;
+    background: rgba(10, 25, 47, 0.75);
     backdrop-filter: blur(12px);
     -webkit-backdrop-filter: blur(12px);
-    color: #c8a96e;
+    color: #7bd0ff;
     border: 1px solid rgba(123, 208, 255, 0.25);
     padding: 0 1.25rem;
     height: 42px;
@@ -53,7 +53,7 @@
 
   .rescan-bubble:hover {
     background: rgba(10, 25, 47, 0.95);
-    border-color: #c8a96e;
+    border-color: rgba(123, 208, 255, 0.5);
   }
 
   .rescan-panel {
@@ -102,8 +102,8 @@
   }
 
   .btn-scan-bubble {
-    background: #c8a96e;                           /* was #7bd0ff */
-    color: #1a1200; 
+    background: #7bd0ff;
+    color: #0a192f;
     border: none;
     padding: 0.4rem 0.8rem;
     border-radius: 0.4rem;
@@ -115,7 +115,7 @@
   }
 
   .btn-scan-bubble:hover {
-    background: #d9bf8f; 
+    background: #a8e0ff;
   }
 
   /* ── Page ── */
@@ -240,30 +240,6 @@
     animation: fade-up 0.5s ease 0.1s both;
   }
 
-  .sr-score-block {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    padding: 1.25rem 1.75rem;
-    border-right: 1px solid var(--border);
-    min-width: 110px;
-    flex-shrink: 0;
-  }
-
-  .sr-score-num {
-    font-size: 2rem;
-    font-weight: 700;
-    line-height: 1;
-  }
-
-  .sr-score-denom {
-    font-size: 0.72rem;
-    color: var(--muted);
-    margin-top: 3px;
-    letter-spacing: 0.03em;
-  }
-
   .sr-banner-body {
     flex: 1;
     display: flex;
@@ -279,12 +255,6 @@
     align-items: center;
     gap: 8px;
     flex-wrap: wrap;
-  }
-
-  .sr-arrow {
-    font-size: 14px;
-    line-height: 1;
-    flex-shrink: 0;
   }
 
   .sr-badge {
@@ -305,52 +275,17 @@
     flex-shrink: 0;
   }
 
-  /* ── Low ── */
+  /* ── Low / not phishing ── */
   .sr-badge.low                { background: #003824; color: #1D9E75; }
   .sr-badge.low .sr-badge-dot  { background: #1D9E75; }
-  .sr-arrow.low                { color: #1D9E75; }
-  .sr-score-num.low            { color: #1D9E75; }
-  .sr-bar-fill.low             { background: #1D9E75; }
-  .sr-threat-dot.low           { background: #1D9E75; }
-  .sr-score-cell.low           { color: #1D9E75; }
 
-  /* ── Medium ── */
-  .sr-badge.medium                { background: #4a3200; color: #ffd080; }
-  .sr-badge.medium .sr-badge-dot  { background: #ffd080; }
-  .sr-arrow.medium                { color: #ffd080; }
-  .sr-score-num.medium            { color: #ffd080; }
-  .sr-bar-fill.medium             { background: #ffd080; }
-  .sr-threat-dot.medium           { background: #ffd080; }
-  .sr-score-cell.medium           { color: #ffd080; }
+  /* ── Medium / anomalies found but under threshold ── */
+  .sr-badge.medium                { background: #3d2c00; color: #ffb84d; }
+  .sr-badge.medium .sr-badge-dot  { background: #ffb84d; }
 
-  /* ── High ── */
+  /* ── High / phishing ── */
   .sr-badge.high                { background: #3d0000; color: #ff6b6b; }
   .sr-badge.high .sr-badge-dot  { background: #ff6b6b; }
-  .sr-arrow.high                { color: #ff6b6b; }
-  .sr-score-num.high            { color: #ff6b6b; }
-  .sr-bar-fill.high             { background: #ff6b6b; }
-  .sr-threat-dot.high           { background: #ff6b6b; }
-  .sr-score-cell.high           { color: #ff6b6b; }
-
-  .sr-banner-msg {
-    font-size: 0.88rem;
-    font-weight: 500;
-    color: var(--text);
-  }
-
-  .sr-bar-track {
-    height: 5px;
-    background: var(--bg-high);
-    border-radius: 99px;
-    overflow: hidden;
-    width: 100%;
-  }
-
-  .sr-bar-fill {
-    height: 100%;
-    border-radius: 99px;
-    width: var(--w);
-  }
 
   .sr-banner-sub {
     font-size: 0.75rem;
@@ -408,21 +343,9 @@
     font-weight: 600;
   }
 
-  .sr-threat-dot {
-    width: 7px;
-    height: 7px;
-    border-radius: 50%;
-    flex-shrink: 0;
-  }
-
   .sr-threat-desc {
     font-size: 0.8rem;
     color: var(--secondary);
-  }
-
-  .sr-score-cell {
-    font-weight: 700;
-    font-size: 0.85rem;
   }
 
   .sr-empty {
@@ -437,11 +360,6 @@
       flex-direction: column;
       align-items: flex-start;
       gap: 0.75rem;
-    }
-
-    .sr-score-block {
-      padding: 1rem 1.25rem;
-      min-width: 90px;
     }
 
     .sr-banner-body {
@@ -498,35 +416,38 @@
       </div>
 
       <div class="sr-banner">
-        <div class="sr-score-block">
-          <span class="sr-score-num risk-{{ risk_level }}">{{ [risk_score, 99]|min }}</span>
-          <span class="sr-score-denom">out of 4</span>
-        </div>
         <div class="sr-banner-body">
           <div class="sr-banner-top">
-            <span class="sr-arrow risk-{{ risk_level }}">←</span>
-            <span class="sr-badge {{ risk_level }}">
+            <span class="sr-badge {{ 'high' if is_phishing else 'low' }}">
               <span class="sr-badge-dot"></span>
-              {{ risk_label }}
+              {% if is_phishing %}
+                Likely Phishing — Exercise Caution
+              {% else %}
+                Not Phishing
+              {% endif %}
             </span>
-
           </div>
-          <div class="sr-bar-track">
-            <div class="sr-bar-fill {{ risk_level }}" style="--w: {{ ([risk_score, 4]|min / 4 * 100)|round }}"></div>
-          </div>
-          <span class="sr-banner-sub">{{ matched_rules|length }} anomal{{ 'y' if matched_rules|length == 1 else 'ies' }}
-            found · Scan completed</span>
+          <span class="sr-banner-sub">
+            {% if is_phishing %}
+              {% if show_rules %}
+                {{ matched_rules|length }} anomal{{ 'y' if matched_rules|length == 1 else 'ies' }} found · Scan completed
+              {% else %}
+                Possible phishing detected · Scan completed
+              {% endif %}
+            {% else %}
+              Scan completed
+            {% endif %}
+          </span>
         </div>
       </div>
 
+      {% if is_phishing and matched_rules and show_rules %}
       <div class="sr-table-wrap">
-        {% if matched_rules %}
         <table class="sr-table">
           <thead>
             <tr>
-              <th>Threat vector</th>
+              <th>Matched Rule</th>
               <th>Description</th>
-              <th>Score</th>
             </tr>
           </thead>
           <tbody>
@@ -534,20 +455,16 @@
             <tr>
               <td>
                 <div class="sr-threat-name">
-                  <span class="sr-threat-dot {{ rule.severity }}"></span>
                   {{ rule.name }}
                 </div>
               </td>
               <td><span class="sr-threat-desc">{{ rule.description }}</span></td>
-              <td><span class="sr-score-cell {{ rule.severity }}">{{ rule.risk_score }}</span></td>
             </tr>
             {% endfor %}
           </tbody>
         </table>
-        {% else %}
-        <div class="sr-empty">No anomalies detected.</div>
-        {% endif %}
       </div>
+      {% endif %}
 
     </div>
   </div>
@@ -557,7 +474,7 @@
     const container = document.getElementById('draggable-rescan');
     const handle = document.getElementById('rescan-handle');
     const panel = document.getElementById('rescan-panel');
-    const title = document.querySelector('.sr-title');
+    const urlCard = document.querySelector('.sr-url-card');
 
     let isDragging = false;
     let startX, startY, initialX, initialY;
@@ -572,10 +489,13 @@
       if (pos) {
         container.style.left = pos.left;
         container.style.top = pos.top;
+      } else if (urlCard) {
+        const cardRect = urlCard.getBoundingClientRect();
+        container.style.left = (cardRect.right - 160) + 'px';
+        container.style.top = (cardRect.top - 60) + 'px';
       } else {
-        const titleRect = title.getBoundingClientRect();
-        container.style.left = (titleRect.right + 20) + 'px';
-        container.style.top = (titleRect.top + (titleRect.height / 2) - 21) + 'px';
+        container.style.left = '20px';
+        container.style.top = '20px';
       }
       container.style.opacity = '1';
     };

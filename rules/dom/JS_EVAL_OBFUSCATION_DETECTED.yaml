@@ -2,7 +2,7 @@ title: JS EVAL OBFUSCATION DETECTED
 description: JavaScript on the page uses eval() or equivalent obfuscation techniques to conceal malicious code from static analysis tools.
 date: 11/11/2024
 type: dom
-risk_score: 4
+risk_score: 1
 detection:
   obfuscation_js_detect:
     regex_list:

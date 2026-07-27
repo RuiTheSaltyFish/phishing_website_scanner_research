@@ -2,7 +2,7 @@ title: USE OF IP
 description: URL host is a raw IP address rather than a domain name, bypassing DNS-based reputation checks and commonly seen in phishing distributio
 date: 11/11/2024
 type: url
-risk_score: 4
+risk_score: 1
 detection:
   url_regex:
     regex: "^(http://|https://)?((?:(?:25[0-5]|2[0-4][0-9]|1[0-9]{2}|[1-9]?[0-9])\\.){3}(?:25[0-5]|2[0-4][0-9]|1[0-9]{2}|[1-9]?[0-9])|(?:[a-fA-F0-9]{1,4}:){7}[a-fA-F0-9]{1,4})"

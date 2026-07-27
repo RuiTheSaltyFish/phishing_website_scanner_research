@@ -2,7 +2,7 @@ title: SSL_VERIFICATION_INVALID
 description: The SSL certificate is invalid, expired, self-signed, or does not match the domain, indicating a potential security risk
 date: 11/11/2024
 type: domain
-risk_score: 4
+risk_score: 2.13
 detection:
   ssl_verify:
     timeout: 10

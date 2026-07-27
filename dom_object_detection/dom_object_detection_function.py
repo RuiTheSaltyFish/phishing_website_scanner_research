@@ -7,6 +7,7 @@ from bs4 import BeautifulSoup
 from camoufox import Camoufox
 from fake_useragent import UserAgent
 import tldextract
+import html as html_lib
 from rapidfuzz import fuzz
 from playwright.sync_api import sync_playwright
 from rule_parser import DomRule
@@ -165,7 +166,7 @@ def body_tag_count(soup: BeautifulSoup, min_text_length=4200, min_tag_count=258)
     text_length = len(body.get_text(strip=True))
     tag_count = len(body.find_all())
     
-    return text_length < min_text_length and tag_count < min_tag_count
+    return text_length < min_text_length or tag_count < min_tag_count
 
 
 def count_high_risk_tag(soup: BeautifulSoup, forbidden_tag: list) -> int:
@@ -193,7 +194,7 @@ def check_mailto_form(soup: BeautifulSoup,rule:DomRule):
         logging.error(f"check_form_action:{e}")
         raise
 
-def count_detected_technologies(soup,tech_list:dict,deficient):
+def count_detected_technologies(soup,tech_list:dict,min_appear):
     """
     Count detected technologies: Google Analytics, jQuery, Bootstrap, Cloudflare.
     Returns count (0-4). Low count = phishing indicator.
@@ -205,9 +206,7 @@ def count_detected_technologies(soup,tech_list:dict,deficient):
     all_src = " ".join(s.get("src", "").lower() for s in all_scripts)
 
     inline_scripts = soup.find_all("script", src=False)
-    inline_text = " ".join(
-        s.string for s in inline_scripts if s.text
-    ).lower()
+    inline_text = " ".join(s.string for s in inline_scripts if s.string).lower()
 
     all_links = soup.find_all("link", rel=True)
     all_href = " ".join(l.get("href", "").lower() for l in all_links)
@@ -219,7 +218,7 @@ def count_detected_technologies(soup,tech_list:dict,deficient):
         if any(p.lower() in combined_text for p in patterns):
             technologies.add(tech_name)
 
-    return  deficient > len(technologies) 
+    return  len(technologies) < min_appear
 
 
 
@@ -463,124 +462,94 @@ def _normalize(text: str) -> str:
 
 def check_page_title_mismatch(
     soup,
-    web_url: str,
-    min_domain_len: int = 4,
-    generic_titles: list = None,
-    meta_list:list = [],
-    title_acronym_detection:dict = None,
-    deficient: float = 0.70,
-) -> bool:
-    import html as html_lib
+    web_url,
+    min_domain_len=4,
+    generic_titles=None,
+    meta_list=[],
+    title_acronym_detection=None,
+    min_similarity_threshold=0.70,
+):
+    """
+    Returns True  → page title likely does NOT belong to the domain (mismatch detected).
+    Returns False → title appears consistent with the domain (no mismatch).
 
-    try:
-        
-        title_tag = soup.find("title")
-        title_str = title_tag.text.strip() if title_tag else None
+    title_acronym_detection, if provided, is a dict:
+        {"min_acronym_length": int, "acronym_min_similarity_score": float}
+    """
+    title_tag = soup.find("title")
+    title_str = title_tag.text.strip() if title_tag else None
+    if not title_str:
+        return False
 
-        if not title_str:
-            return False
+    if generic_titles and any(g in title_str.lower() for g in generic_titles):
+        return False
 
-        if generic_titles:
-            title_lower_check = title_str.lower()
-            if any(g in title_lower_check for g in generic_titles):
+    title_str = html_lib.unescape(title_str)
+    title_normalized = _normalize(title_str)
+
+    ext = tldextract.extract(web_url)
+    if ext.domain == "www":
+        domain_lower, subdomain_lower = ext.suffix.lower(), ""
+    else:
+        domain_lower, subdomain_lower = ext.domain.lower(), ext.subdomain.lower()
+
+    if len(domain_lower) < min_domain_len:
+        return False
+
+    parts = [
+        p for p in [domain_lower, subdomain_lower]
+        if p and len(p) >= min_domain_len and p != "www"
+    ]
+    if not parts:
+        return False
+
+    title_nospace = title_normalized.replace(" ", "")
+    if any(p in title_normalized or p in title_nospace for p in parts):
+        return False
+
+    if "og:site_name" in meta_list:
+        og = soup.find("meta", property="og:site_name")
+        if og:
+            sn = _normalize(og.get("content", "").lower())
+            if any(p in sn or p in sn.replace(" ", "") for p in parts):
+                return False
+            if sum(fuzz.partial_ratio(p, sn) / 100 for p in parts) / len(parts) >= min_similarity_threshold:
                 return False
 
-        title_str = html_lib.unescape(title_str)
+    if "og:title" in meta_list:
+        og = soup.find("meta", property="og:title")
+        if og:
+            st = _normalize(og.get("content", "").lower())
+            if any(p in st or p in st.replace(" ", "") for p in parts):
+                return False
+            if sum(fuzz.partial_ratio(p, st) / 100 for p in parts) / len(parts) >= min_similarity_threshold:
+                return False
 
-        title_normalized = _normalize(title_str)
+    if title_acronym_detection:
+        acronym = "".join(
+            w[0].lower() for w in title_str.split() if w and w[0].isalnum()
+        )
+        if len(acronym) >= title_acronym_detection["min_acronym_length"]:
+            if (
+                sum(fuzz.ratio(p, acronym) / 100 for p in parts) / len(parts)
+                >= title_acronym_detection["acronym_min_similarity_score"]
+            ):
+                return False
 
-        ext = tldextract.extract(web_url)
-        if ext.domain == "www":
-            registered_domain = ext.suffix.lower()
-            domain_lower = ext.suffix.lower()
-            subdomain_lower = ""
-        else:
-            registered_domain = f"{ext.domain}.{ext.suffix}"
-            domain_lower = ext.domain.lower()
-            subdomain_lower = ext.subdomain.lower()
+    ratios = [
+        fuzz.ratio(p, title_normalized) / 100
+        if len(title_normalized) <= min_domain_len
+        else fuzz.partial_ratio(p, title_normalized) / 100
+        for p in parts
+    ]
+    if sum(ratios) / len(ratios) >= min_similarity_threshold:
+        return False
 
-        if len(domain_lower) < min_domain_len:
-            return False
+    page_text = _normalize(soup.get_text(separator=" ", strip=True))
+    if any(p in page_text for p in parts):
+        return False
 
-        parts = [p for p in [domain_lower, subdomain_lower]
-                 if p and len(p) >= min_domain_len and p != "www"]
-        
-        
-        if not parts:
-            return False
-
-        title_nospace = title_normalized.replace(" ", "")
-        if any(p in title_normalized or p in title_nospace for p in parts):
-            return False
-        
-        
-        if "og:site_name" in meta_list:
-            og_site = soup.find("meta", property="og:site_name")
-            site_name = ""
-            site_name_normalized = ""
-            site_name_nospace = ""
-            
-            if og_site:
-                site_name = og_site.get("content", "").lower()
-                site_name_normalized = _normalize(site_name)
-                site_name_nospace = site_name_normalized.replace(" ", "")
-                
-            if og_site:
-                if any(p in site_name_normalized or p in site_name_nospace for p in parts):
-                    return False
-                site_ratios = [fuzz.partial_ratio(p, site_name_normalized) / 100 for p in parts]
-                if sum(site_ratios) / len(site_ratios) >= deficient:
-                    return False
-            
-        
-        if " og:title" in meta_list:
-            og_site_title = soup.find("meta", property="og:title")
-            site_title = ""
-            site_title_normalized = ""
-            site_title_nospace = ""
-
-            if og_site_title:
-                site_title = og_site_title.get("content", "").lower()
-                site_title_normalized = _normalize(site_title)
-                site_title_nospace = site_title_normalized.replace(" ", "")
-                
-            if og_site_title:
-                if any(p in site_title_normalized or p in site_title_nospace for p in parts):
-                    return False
-                site_title_ratios = [fuzz.partial_ratio(p, site_title_normalized) / 100 for p in parts]
-                if sum(site_title_ratios) / len(site_title_ratios) >= deficient:
-                    return False
-
-       
-        if title_acronym_detection:
-            
-            title_acronym = "".join(
-                w[0].lower() if w[0].isalnum() else ""
-                for w in title_str.split()
-                if w
-            )
-            
-            if len(title_acronym) >= title_acronym_detection["min_length"]:
-                acronym_fuzz_ratios = [fuzz.ratio(p, title_acronym) / 100 for p in parts]
-                if sum(acronym_fuzz_ratios) / len(acronym_fuzz_ratios) >= title_acronym_detection["acronym_deficient"]:
-                    return False
-
-        if len(title_normalized) <= min_domain_len:
-            title_ratios = [fuzz.ratio(p, title_normalized) / 100 for p in parts]
-        else:
-            title_ratios = [fuzz.partial_ratio(p, title_normalized) / 100 for p in parts]
-
-        if sum(title_ratios) / len(title_ratios) >= deficient:
-            return False
-
-        page_text = _normalize(soup.get_text(separator=" ", strip=True))
-        if any(p in page_text for p in parts):
-            return False
-        
-        return True
-
-    except Exception as e:
-        raise
+    return True
 
 
 def check_external_request_suspicious(

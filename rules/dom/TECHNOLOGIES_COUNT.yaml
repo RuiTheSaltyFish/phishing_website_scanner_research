@@ -1,11 +1,12 @@
 title: TECHNOLOGIES COUNT
-description: Page body and tag lower than certain amount indicate a phishing page
+description: >
+  Detects websites that use very few common web technologies or trusted third-party frameworks. Legitimate business websites typically include popular libraries, CDNs, analytics, or frontend frameworks (e.g., Google Analytics, gstatic, Bootstrap, jQuery, Cloudflare). A low technology count may indicate a newly created, low-quality, or potentially suspicious website.
 date: 11/11/2024
 type: dom
-risk_score: 1
+risk_score: 1.26
 detection:
   technologies_count:
-    deficient: 1
+    min_appear: 1
     tech_list:
       Google Analytics:
         patterns:
